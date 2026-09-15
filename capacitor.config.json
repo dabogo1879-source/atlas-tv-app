@@ -1,0 +1,8 @@
+{
+  "appId": "com.david.atlastv",
+  "appName": "Atlas TV",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

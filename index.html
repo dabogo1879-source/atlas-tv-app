@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1117">
+<title>Atlas TV</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1117'/><text x='50' y='68' font-size='52' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23ff3d5a'>A</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="logo">A</span><h1>Atlas TV</h1></div>
+  <input id="search" type="search" placeholder="Buscar canal…" autocomplete="off">
+  <nav class="tabs">
+    <button data-src="ec" class="tab active">Ecuador</button>
+    <button data-src="latam" class="tab">LatAm</button>
+    <button data-src="global" class="tab">Global</button>
+  </nav>
+</header>
+
+<aside id="groups" class="groups">
+  <button data-grp="" class="grp active">Todos</button>
+  <button data-grp="⭐" class="grp fav">Favoritos</button>
+</aside>
+
+<main>
+  <div id="count" class="count"></div>
+  <div id="grid" class="grid"></div>
+</main>
+
+<dialog id="player">
+  <div class="pl-head">
+    <span id="pl-name"></span>
+    <button id="pl-close" title="Cerrar">✕</button>
+  </div>
+  <div class="pl-body">
+    <video id="video" autoplay controls playsinline></video>
+    <div id="pl-status" class="pl-status"></div>
+  </div>
+  <div class="pl-zap">
+    <button id="zap-prev" title="Anterior">⏮</button>
+    <span id="pl-src"></span>
+    <button id="zap-next" title="Siguiente">⏭</button>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script src="app.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
