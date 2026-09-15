@@ -7,7 +7,6 @@
 <title>Atlas TV</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1117'/><text x='50' y='68' font-size='52' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23ff3d5a'>A</text></svg>">
-<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -15,6 +14,7 @@
   <div class="brand"><span class="logo">A</span><h1>Atlas TV</h1></div>
   <input id="search" type="search" placeholder="Buscar canal…" autocomplete="off">
   <nav class="tabs" id="tabs"></nav>
+  <button id="btn-settings" title="Ajustes">⚙</button>
   <div id="custom-src">
     <input id="custom-url" type="url" placeholder="Pega URL de lista .m3u y toca Cargar">
     <button id="custom-go">Cargar lista</button>
@@ -39,6 +39,13 @@
   <div class="pl-body">
     <video id="video" autoplay controls playsinline></video>
     <div id="pl-status" class="pl-status"></div>
+    <div id="pl-epg" class="pl-epg"></div>
+  </div>
+  <div class="pl-tools">
+    <button id="pl-speed" title="Velocidad">⏩ 1x</button>
+    <span id="pl-audio-wrap" class="wrap hide"><label>♪</label><select id="pl-audio"></select></span>
+    <span id="pl-subs-wrap" class="wrap hide"><label>CC</label><select id="pl-subs"></select></span>
+    <button id="pl-full" title="Pantalla completa">⛶</button>
   </div>
   <div class="pl-zap">
     <button id="zap-prev" title="Anterior">⏮</button>
@@ -47,8 +54,22 @@
   </div>
 </dialog>
 
+<dialog id="dlg-settings">
+  <div class="set-head">
+    <span>Ajustes</span>
+    <button id="set-close" title="Cerrar">✕</button>
+  </div>
+  <label class="set-lbl" for="set-epg">EPG · URL XMLTV (.xml o .xml.gz) opcional</label>
+  <input id="set-epg" type="url" placeholder="https://…/guide.xml" autocomplete="off">
+  <div class="set-actions">
+    <button id="set-test">Probar</button>
+    <button id="set-save" class="primary">Guardar</button>
+  </div>
+  <div id="epg-state" class="epg-state">Sin EPG configurado.</div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="app.js"></script>
+<script src="boot.js"></script>
 <script>
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});

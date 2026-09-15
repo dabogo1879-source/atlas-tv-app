@@ -8,7 +8,7 @@ const www = join(root, 'www');
 rmSync(www, { recursive: true, force: true });
 mkdirSync(www, { recursive: true });
 
-const files = ['index.html', 'styles.css', 'app.js', 'sw.js', 'manifest.webmanifest'];
+const files = ['index.html', 'styles.css', 'app.js', 'boot.js', 'sw.js', 'manifest.webmanifest'];
 for (const f of files) cpSync(join(root, f), join(www, f));
 
 let html = readFileSync(join(www, 'index.html'), 'utf8');
