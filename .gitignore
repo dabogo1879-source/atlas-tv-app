@@ -3,4 +3,5 @@ dist/
 www/
 android/
 *.log
-.DS_Storeapk/
+.DS_Store
+apk/
