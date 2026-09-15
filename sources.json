@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "updated": "2026-09-14",
   "comment": [
     "FUENTES DE ATLAS TV - edita este archivo en GitHub y la app se actualizara sola al abrir.",
@@ -8,6 +8,8 @@
     "  https://iptv-org.github.io/iptv/countries/{pais}.m3u  (ec, mx, ar, cl, pe, co, ve, bo, py, uy, cr, latam...)",
     "  https://iptv-org.github.io/iptv/languages/spa.m3u      (2.278 canales en espanol, todo el mundo)",
     "  https://iptv-org.github.io/iptv/index.m3u             (22.730 canales, mundo completo)",
+    "  https://iptv-org.github.io/iptv/categories/movies.m3u (canales de cine)",
+    "  https://iptv-org.github.io/iptv/categories/series.m3u (canales de series)",
     "Tambien puedes apuntar a cualquier otra lista .m3u publica de internet."
   ],
   "sources": [
@@ -25,6 +27,16 @@
       "id": "spa",
       "label": "Español",
       "url": "https://iptv-org.github.io/iptv/languages/spa.m3u"
+    },
+    {
+      "id": "movies",
+      "label": "Películas",
+      "url": "https://iptv-org.github.io/iptv/categories/movies.m3u"
+    },
+    {
+      "id": "series",
+      "label": "Series",
+      "url": "https://iptv-org.github.io/iptv/categories/series.m3u"
     },
     {
       "id": "global",
