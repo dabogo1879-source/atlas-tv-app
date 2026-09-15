@@ -1,18 +1,20 @@
 'use strict';
 
 /* ================= Fuentes ================= */
-const SOURCES = {
-  ec:    'https://iptv-org.github.io/iptv/countries/ec.m3u',
-  latam: 'https://iptv-org.github.io/iptv/countries/latam.m3u',
-  spa:   'https://iptv-org.github.io/iptv/languages/spa.m3u',
-  global:'https://iptv-org.github.io/iptv/index.m3u',
+const SOURCES_URL = 'https://dabogo1879-source.github.io/atlas-tv-app/sources.json';
+const DEFAULTS = {
+  ec:    { label: 'Ecuador', url: 'https://iptv-org.github.io/iptv/countries/ec.m3u' },
+  latam: { label: 'LatAm',   url: 'https://iptv-org.github.io/iptv/countries/latam.m3u' },
+  spa:   { label: 'Español', url: 'https://iptv-org.github.io/iptv/languages/spa.m3u' },
+  global:{ label: 'Global',  url: 'https://iptv-org.github.io/iptv/index.m3u' },
 };
-const CUSTOM_KEY = 'atlas-tv-custom-url';
 const CACHE_SRC = 'atlas-tv-cache';
+const CUSTOM_KEY = 'atlas-tv-custom-url';
 
 /* ================= Estado ================= */
 const state = {
   src: 'ec',
+  sources: { ...DEFAULTS },
   groups: [],
   channels: [],
   filtered: [],
@@ -27,11 +29,52 @@ const video = $('#video');
 /* ================= Persistencia ================= */
 function saveFavs(){ localStorage.setItem('atlas-tv-favs', JSON.stringify([...state.favs])); }
 
+/* ================= Fuentes remotas ================= */
+async function loadSources(){
+  const t0 = performance.now();
+  try{
+    const cached = await caches.open(CACHE_SRC).then(c => c.match(SOURCES_URL));
+    let txt = cached ? await cached.text() : null;
+    if(!txt){
+      const r = await fetch(SOURCES_URL);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      txt = await r.text();
+      await caches.open(CACHE_SRC).then(c => c.put(SOURCES_URL, new Response(txt)));
+    }
+    const cfg = JSON.parse(txt);
+    if(cfg && cfg.sources && Array.isArray(cfg.sources) && cfg.sources.length){
+      const next = {};
+      cfg.sources.forEach(s => { if(s.id && s.url) next[s.id] = { label: s.label || s.id, url: s.url }; });
+      state.sources = next;
+    }
+    setStatus(`✅ Fuentes actualizadas: ${Object.keys(state.sources).length} pestañas (sin conexión usaré las locales)`);
+  }catch(e){
+    setStatus('⚠️ Sin acceso a fuentes remotas, usando locales', true);
+  }
+  renderTabs();
+  loadPlaylist(state.src);
+}
+
+function renderTabs(){
+  const tabs = $('#tabs');
+  tabs.innerHTML = Object.entries(state.sources)
+    .map(([id, s]) => `<button data-src="${id}" class="tab${id === state.src ? ' active' : ''}">${s.label}</button>`)
+    .join('');
+  tabs.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      state.src = t.dataset.src;
+      loadPlaylist(state.src);
+    });
+  });
+}
+
 /* ================= Data: playlist === ================= */
 async function loadPlaylist(src){
   const url = src === 'custom'
     ? localStorage.getItem(CUSTOM_KEY) || ''
-    : SOURCES[src];
+    : (state.sources[src] && state.sources[src].url) || '';
   if(!url){ setStatus('Sin URL personalizada guardada', true); return; }
   const t0 = performance.now();
   setStatus('Cargando canales…');
@@ -214,15 +257,6 @@ $('#groups').addEventListener('click', e => {
   applyFilter();
 });
 
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    state.src = t.dataset.src;
-    loadPlaylist(state.src);
-  });
-});
-
 $('#custom-go').addEventListener('click', () => {
   const u = $('#custom-url').value.trim();
   if(!u){ setStatus('Pega una URL de lista .m3u primero', true); return; }
@@ -247,4 +281,4 @@ document.addEventListener('keydown', e => {
 });
 
 /* ================= Arranque ================= */
-loadPlaylist('ec');
+loadSources();
