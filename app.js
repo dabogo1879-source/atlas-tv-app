@@ -3,13 +3,42 @@
 /* ================= Fuentes ================= */
 const SOURCES_URL = 'https://dabogo1879-source.github.io/atlas-tv-app/sources.json';
 const DEFAULTS = {
-  ec:    { label: 'Ecuador', url: 'https://iptv-org.github.io/iptv/countries/ec.m3u' },
-  latam: { label: 'LatAm',   url: 'https://iptv-org.github.io/iptv/countries/latam.m3u' },
-  spa:   { label: 'Español', url: 'https://iptv-org.github.io/iptv/languages/spa.m3u' },
-  global:{ label: 'Global',  url: 'https://iptv-org.github.io/iptv/index.m3u' },
+  ec:     { label: 'Ecuador',  url: 'https://iptv-org.github.io/iptv/countries/ec.m3u' },
+  latam:  { label: 'LatAm',    url: 'https://iptv-org.github.io/iptv/countries/latam.m3u' },
+  spa:    { label: 'Español',  url: 'https://iptv-org.github.io/iptv/languages/spa.m3u' },
+  movies: { label: 'Películas',url: 'https://iptv-org.github.io/iptv/categories/movies.m3u' },
+  series: { label: 'Series',   url: 'https://iptv-org.github.io/iptv/categories/series.m3u' },
+  global: { label: 'Global',   url: 'https://iptv-org.github.io/iptv/index.m3u' },
 };
-const CACHE_SRC = 'atlas-tv-cache';
+const CACHE_KEY = 'atlas-tv-cache-';        // prefijo localStorage (fallback universal)
 const CUSTOM_KEY = 'atlas-tv-custom-url';
+
+function cacheGet(url){
+  return localStorage.getItem(CACHE_KEY + url);
+}
+function cacheSet(url, txt){
+  try{ localStorage.setItem(CACHE_KEY + url, txt); }catch(_){}
+}
+
+/* Fetch con timeout que cachea en localStorage SIEMPRE (no depende de Cache Storage API) */
+async function fetchCached(url, ttlMs){
+  const hit = cacheGet(url);
+  if(hit){
+    const t = JSON.parse(hit);
+    if(!ttlMs || (Date.now() - t.ts) < ttlMs) return t.txt;
+  }
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 20000);
+  try{
+    const r = await fetch(url, { signal: ctrl.signal });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const txt = await r.text();
+    cacheSet(url, JSON.stringify({ ts: Date.now(), txt }));
+    return txt;
+  }finally{
+    clearTimeout(t);
+  }
+}
 
 /* ================= Estado ================= */
 const state = {
@@ -31,25 +60,25 @@ function saveFavs(){ localStorage.setItem('atlas-tv-favs', JSON.stringify([...st
 
 /* ================= Fuentes remotas ================= */
 async function loadSources(){
-  const t0 = performance.now();
+  let txt = null, msg = '';
   try{
-    const cached = await caches.open(CACHE_SRC).then(c => c.match(SOURCES_URL));
-    let txt = cached ? await cached.text() : null;
-    if(!txt){
-      const r = await fetch(SOURCES_URL);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      txt = await r.text();
-      await caches.open(CACHE_SRC).then(c => c.put(SOURCES_URL, new Response(txt)));
-    }
-    const cfg = JSON.parse(txt);
-    if(cfg && cfg.sources && Array.isArray(cfg.sources) && cfg.sources.length){
-      const next = {};
-      cfg.sources.forEach(s => { if(s.id && s.url) next[s.id] = { label: s.label || s.id, url: s.url }; });
-      state.sources = next;
-    }
-    setStatus(`✅ Fuentes actualizadas: ${Object.keys(state.sources).length} pestañas (sin conexión usaré las locales)`);
+    txt = await fetchCached(SOURCES_URL, 15*60*1000);   // 15 min de TTL
+    msg = '✅ Fuentes actualizadas desde internet';
   }catch(e){
-    setStatus('⚠️ Sin acceso a fuentes remotas, usando locales', true);
+    const stale = cacheGet(SOURCES_URL);
+    if(stale){ txt = JSON.parse(stale).txt; msg = '⚠️ Sin internet: usando fuentes guardadas'; }
+    else{ setStatus('⚠️ Sin acceso a fuentes remotas, usando locales', true); }
+  }
+  if(txt){
+    try{
+      const cfg = JSON.parse(txt);
+      if(cfg && cfg.sources && Array.isArray(cfg.sources) && cfg.sources.length){
+        const next = {};
+        cfg.sources.forEach(s => { if(s.id && s.url) next[s.id] = { label: s.label || s.id, url: s.url }; });
+        state.sources = next;
+        setStatus(`${msg} · ${Object.keys(state.sources).length} pestañas`);
+      }
+    }catch(_){}
   }
   renderTabs();
   loadPlaylist(state.src);
@@ -79,13 +108,14 @@ async function loadPlaylist(src){
   const t0 = performance.now();
   setStatus('Cargando canales…');
   try{
-    const cached = await caches.open(CACHE_SRC).then(c => c.match(url));
-    let txt = cached ? await cached.text() : null;
-    if(!txt){
-      const r = await fetch(url);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      txt = await r.text();
-      await caches.open(CACHE_SRC).then(c => c.put(url, new Response(txt)));
+    let txt;
+    try{
+      txt = await fetchCached(url, null);   // sin TTL: m3u cambia poco, aprovecha caché local
+    }catch(e){
+      const stale = cacheGet(url);
+      if(!stale) throw e;
+      txt = JSON.parse(stale).txt;
+      setStatus('⚠️ Sin internet: usando lista guardada', true);
     }
     state.channels = parseM3U(txt);
     state.groups = [...new Set(state.channels.map(c => c.group).filter(Boolean))].sort();
