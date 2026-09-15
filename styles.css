@@ -39,6 +39,20 @@ body{
   border-radius:8px;padding:7px 13px;font-size:13px;cursor:pointer;
 }
 .tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+#custom-src{
+  display:flex;gap:6px;padding:0 16px 10px;background:var(--panel);
+  border-bottom:1px solid var(--line);
+}
+#custom-url{
+  flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);
+  color:var(--txt);border-radius:8px;padding:7px 10px;font-size:12px;
+}
+#custom-url:focus{outline:none;border-color:var(--accent)}
+#custom-go{
+  background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;flex:0 0 auto;
+}
+#custom-go:hover{border-color:var(--accent);color:var(--accent)}
 /* grupos */
 .groups{
   display:flex;gap:6px;overflow-x:auto;padding:10px 16px;

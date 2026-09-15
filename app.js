@@ -4,8 +4,10 @@
 const SOURCES = {
   ec:    'https://iptv-org.github.io/iptv/countries/ec.m3u',
   latam: 'https://iptv-org.github.io/iptv/countries/latam.m3u',
+  spa:   'https://iptv-org.github.io/iptv/languages/spa.m3u',
   global:'https://iptv-org.github.io/iptv/index.m3u',
 };
+const CUSTOM_KEY = 'atlas-tv-custom-url';
 const CACHE_SRC = 'atlas-tv-cache';
 
 /* ================= Estado ================= */
@@ -27,7 +29,10 @@ function saveFavs(){ localStorage.setItem('atlas-tv-favs', JSON.stringify([...st
 
 /* ================= Data: playlist === ================= */
 async function loadPlaylist(src){
-  const url = SOURCES[src];
+  const url = src === 'custom'
+    ? localStorage.getItem(CUSTOM_KEY) || ''
+    : SOURCES[src];
+  if(!url){ setStatus('Sin URL personalizada guardada', true); return; }
   const t0 = performance.now();
   setStatus('Cargando canales…');
   try{
@@ -216,6 +221,15 @@ document.querySelectorAll('.tab').forEach(t => {
     state.src = t.dataset.src;
     loadPlaylist(state.src);
   });
+});
+
+$('#custom-go').addEventListener('click', () => {
+  const u = $('#custom-url').value.trim();
+  if(!u){ setStatus('Pega una URL de lista .m3u primero', true); return; }
+  localStorage.setItem(CUSTOM_KEY, u);
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  state.src = 'custom';
+  loadPlaylist('custom');
 });
 
 $('#pl-close').addEventListener('click', () => {
